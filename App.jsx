@@ -21,7 +21,8 @@ App = React.createClass({
 
     return {
       tasks: Tasks.find(query, {sort: {createdAt: -1}}).fetch(),
-      incompleteCount: Tasks.find({checked: {$ne: true}}).count()
+      incompleteCount: Tasks.find({checked: {$ne: true}}).count(),
+      currentUser: Meteor.user() // update getMeteorData to return data about user
     };
   },
 
@@ -38,9 +39,11 @@ App = React.createClass({
     // Find the text field via the React ref
     var text = React.findDOMNode(this.refs.textInput).value.trim();
 
-    Tasks.insert({
+    Tasks.insert({ // saves data from client side to server side
       text: text,
-      createdAt: new Date() // current time
+      createdAt: new Date(),            // current time
+      owner: Meteor.userId(),           // _id of logged in user
+      username: Meteor.user().username  // username of logged in user
     });
 
     // Clear form after submitting
@@ -68,13 +71,18 @@ App = React.createClass({
             Hide Completed Tasks
           </label>
 
-{/* This is how you add comments to JSX code...
-    This is the form to add new tasks */}
-          <form className="new-task" onSubmit={this.handleSubmit} >
-            <input type="text"
-              ref="textInput"
-              placeholder="Type to add new tasks" />
-          </form>
+          <AccountsUIWrapper />
+
+          { this.data.currentUser ? // wraps new task form to only show when user is logged in
+
+            /* This is how you add comments to JSX code...
+              This is the form to add new tasks */
+            <form className="new-task" onSubmit={this.handleSubmit} >
+              <input type="text"
+                ref="textInput"
+                placeholder="Type to add new tasks" />
+            </form> : ''
+          }
         </header>
 
         <ul>
